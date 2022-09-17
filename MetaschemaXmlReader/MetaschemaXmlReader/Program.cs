@@ -3,9 +3,9 @@ using System.Xml;
 using System.Xml.Linq;
 
 //static IEnumerable<XElement> Process(StreamReader stream)
-static void Process(StreamReader stream)
+static void Process(StreamReader stream, XmlReaderSettings? settings)
 {
-    using (XmlReader reader = XmlReader.Create(stream))
+    using (XmlReader reader = XmlReader.Create(stream, settings))
     {
         while (reader.Read())
         {
@@ -17,14 +17,20 @@ static void Process(StreamReader stream)
                 case XmlNodeType.SignificantWhitespace:
                     break;
                 case XmlNodeType.Element:
-                    Console.WriteLine(reader.Name);
+                            Console.WriteLine($"Element: {reader.Name}");
+                    if (reader.IsEmptyElement)
+                    {
+                        Console.WriteLine($"EndElement: {reader.Name} (self-closing)");
+                    }
                     break;
                 case XmlNodeType.Text:
-                    Console.WriteLine(reader.Value);
+                    Console.WriteLine($"Text: \"{reader.Value}\'");
                     break;
                 case XmlNodeType.Attribute:
+                    Console.WriteLine($"Attribute: {reader.Value}");
                     break;
                 case XmlNodeType.EndElement:
+                    Console.WriteLine($"EndElement: {reader.Name}");
                     break;
                 case XmlNodeType.Comment:
                     break;
@@ -56,12 +62,13 @@ static void Process(StreamReader stream)
 
 
 using var file = new FileStream(
-        @"oscal_metadata_metaschema.xml",
+        @"oscal_ssp_metaschema.xml",
         FileMode.Open,
         FileAccess.Read
     );
 using var stream = new StreamReader(file, Encoding.UTF8);
-
-Process(stream);
+XmlReaderSettings settings = new XmlReaderSettings();
+settings.DtdProcessing = DtdProcessing.Parse;
+Process(stream, settings);
 //string content = await sr.ReadToEndAsync();
 //Console.WriteLine(content);
